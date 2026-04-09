@@ -100,7 +100,7 @@ function renderSidebar(activePage) {
     <div class="sidebar-brand">
       <div class="brand-icon">⚖</div>
       <div>
-        <div class="brand-text">ChapterWatch</div>
+        <div class="brand-text">GreekPath</div>
         <div class="brand-sub">Penn State</div>
       </div>
     </div>
