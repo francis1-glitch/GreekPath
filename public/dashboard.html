@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChapterWatch — Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">Dashboard</div>
+        <div class="topbar-subtitle">Spring 2026 — Penn State Greek Life</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" id="addOrgBtn">+ Add Chapter</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-icon navy">🏛</div><div><div class="stat-label">Total Chapters</div><div class="stat-value" id="s-total">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">✓</div><div><div class="stat-label">Active</div><div class="stat-value" id="s-active">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon amber">⚠</div><div><div class="stat-label">Probation</div><div class="stat-value" id="s-probation">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon red">✕</div><div><div class="stat-label">Suspended</div><div class="stat-value" id="s-suspended">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon blue">📋</div><div><div class="stat-label">Compliance Rate</div><div class="stat-value" id="s-compliance">—</div><div class="stat-sub">across all requirements</div></div></div>
+        <div class="stat-card"><div class="stat-icon red">🚨</div><div><div class="stat-label">Open Incidents</div><div class="stat-value" id="s-incidents">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon amber">📅</div><div><div class="stat-label">Pending Events</div><div class="stat-value" id="s-events">—</div></div></div>
+      </div>
+
+      <!-- Filters + Chapter Grid -->
+      <div class="section-header">
+        <div>
+          <div class="section-title">All Chapters</div>
+          <div class="section-subtitle">Click a chapter to view details</div>
+        </div>
+        <div class="filters-bar" style="margin-bottom:0">
+          <input class="filter-input" type="text" id="searchInput" placeholder="Search chapters…">
+          <select class="filter-select" id="councilFilter">
+            <option value="">All Councils</option>
+            <option value="IFC">IFC</option>
+            <option value="PHC">PHC</option>
+            <option value="MGC">MGC</option>
+            <option value="NPHC">NPHC</option>
+          </select>
+          <select class="filter-select" id="statusFilter">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="probation">Probation</option>
+            <option value="suspended">Suspended</option>
+            <option value="revoked">Revoked</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="chapters-grid" id="chaptersGrid">
+        <div class="page-loader"><div class="spinner"></div> Loading chapters…</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Organization Modal -->
+<div class="modal-backdrop" id="addOrgModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Chapter</div>
+      <button class="modal-close" onclick="closeModal('addOrgModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="addOrgForm">
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Organization Name *</label>
+            <input type="text" class="form-input-light" name="name" placeholder="Sigma Chi" required>
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Chapter Letters *</label>
+            <input type="text" class="form-input-light" name="chapter_letters" placeholder="ΣΧ" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Council *</label>
+            <select class="form-select-light" name="council" required>
+              <option value="">Select…</option>
+              <option value="IFC">IFC</option>
+              <option value="PHC">PHC</option>
+              <option value="MGC">MGC</option>
+              <option value="NPHC">NPHC</option>
+            </select>
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Status</label>
+            <select class="form-select-light" name="status">
+              <option value="active">Active</option>
+              <option value="probation">Probation</option>
+              <option value="suspended">Suspended</option>
+              <option value="revoked">Revoked</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group-light">
+          <label class="form-label-light">National Affiliation</label>
+          <input type="text" class="form-input-light" name="national_affiliation" placeholder="Sigma Chi International Fraternity">
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Advisor Name</label>
+            <input type="text" class="form-input-light" name="advisor_name" placeholder="Dr. Smith">
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Advisor Email</label>
+            <input type="email" class="form-input-light" name="advisor_email" placeholder="advisor@psu.edu">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Roster Size</label>
+            <input type="number" class="form-input-light" name="roster_size" placeholder="45" min="0">
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Chapter GPA</label>
+            <input type="number" class="form-input-light" name="gpa" placeholder="3.20" min="0" max="4" step="0.01">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Founded Date</label>
+            <input type="date" class="form-input-light" name="founded_date">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addOrgModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveOrgBtn">Save Chapter</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>

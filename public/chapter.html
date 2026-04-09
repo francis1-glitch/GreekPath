@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChapterWatch — Chapter Detail</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <button class="btn btn-ghost btn-sm" onclick="history.back()" style="margin-bottom:4px">← Back</button>
+        <div class="topbar-title" id="pageTitle">Chapter Detail</div>
+      </div>
+      <div class="topbar-right" id="topbarActions"></div>
+    </header>
+
+    <div class="page-content" id="pageContent">
+      <div class="page-loader"><div class="spinner"></div> Loading chapter…</div>
+    </div>
+  </main>
+</div>
+
+<!-- Edit Chapter Modal -->
+<div class="modal-backdrop" id="editOrgModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Chapter</div>
+      <button class="modal-close" onclick="closeModal('editOrgModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="editOrgForm">
+        <input type="hidden" name="id">
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Organization Name *</label>
+            <input type="text" class="form-input-light" name="name" required>
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Chapter Letters *</label>
+            <input type="text" class="form-input-light" name="chapter_letters" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Council *</label>
+            <select class="form-select-light" name="council" required>
+              <option value="IFC">IFC</option>
+              <option value="PHC">PHC</option>
+              <option value="MGC">MGC</option>
+              <option value="NPHC">NPHC</option>
+            </select>
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Status</label>
+            <select class="form-select-light" name="status">
+              <option value="active">Active</option>
+              <option value="probation">Probation</option>
+              <option value="suspended">Suspended</option>
+              <option value="revoked">Revoked</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group-light">
+          <label class="form-label-light">National Affiliation</label>
+          <input type="text" class="form-input-light" name="national_affiliation">
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Advisor Name</label>
+            <input type="text" class="form-input-light" name="advisor_name">
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Advisor Email</label>
+            <input type="email" class="form-input-light" name="advisor_email">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Roster Size</label>
+            <input type="number" class="form-input-light" name="roster_size" min="0">
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Chapter GPA</label>
+            <input type="number" class="form-input-light" name="gpa" min="0" max="4" step="0.01">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Founded Date</label>
+            <input type="date" class="form-input-light" name="founded_date">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('editOrgModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveEditOrgBtn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Update Compliance Modal -->
+<div class="modal-backdrop" id="complianceModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="complianceModalTitle">Update Compliance Status</div>
+      <button class="modal-close" onclick="closeModal('complianceModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="complianceModalDesc" class="text-sm text-muted mb-4" style="margin-bottom:14px"></div>
+      <div class="form-group-light">
+        <label class="form-label-light">Status</label>
+        <select class="form-select-light" id="complianceStatusSel">
+          <option value="pending">Pending</option>
+          <option value="compliant">Compliant</option>
+          <option value="overdue">Overdue</option>
+          <option value="waived">Waived</option>
+        </select>
+      </div>
+      <div class="form-group-light">
+        <label class="form-label-light">Notes</label>
+        <textarea class="form-textarea-light" id="complianceNotes" placeholder="Optional reviewer notes…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('complianceModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveComplianceBtn">Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Incident Modal -->
+<div class="modal-backdrop" id="addIncidentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Report Incident</div>
+      <button class="modal-close" onclick="closeModal('addIncidentModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="addIncidentForm">
+        <input type="hidden" name="org_id">
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Type *</label>
+            <select class="form-select-light" name="type" required>
+              <option value="">Select…</option>
+              <option value="hazing">Hazing</option>
+              <option value="alcohol">Alcohol</option>
+              <option value="sexual_misconduct">Sexual Misconduct</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Severity *</label>
+            <select class="form-select-light" name="severity" required>
+              <option value="">Select…</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group-light">
+          <label class="form-label-light">Description *</label>
+          <textarea class="form-textarea-light" name="description" required placeholder="Describe the incident…"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addIncidentModal')">Cancel</button>
+      <button class="btn btn-danger" id="saveIncidentBtn">Report Incident</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Event Modal -->
+<div class="modal-backdrop" id="addEventModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Register Event</div>
+      <button class="modal-close" onclick="closeModal('addEventModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="addEventForm">
+        <input type="hidden" name="org_id">
+        <div class="form-group-light">
+          <label class="form-label-light">Event Name *</label>
+          <input type="text" class="form-input-light" name="name" required placeholder="Spring Formal">
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Date *</label>
+            <input type="datetime-local" class="form-input-light" name="date" required>
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Expected Attendance</label>
+            <input type="number" class="form-input-light" name="expected_attendance" min="1" placeholder="100">
+          </div>
+        </div>
+        <div class="form-group-light">
+          <label class="form-label-light">Venue</label>
+          <input type="text" class="form-input-light" name="venue" placeholder="The Penn Stater Conference Center">
+        </div>
+        <div class="form-group-light">
+          <label class="form-label-light">Security Plan</label>
+          <textarea class="form-textarea-light" name="security_plan" placeholder="Describe security arrangements…"></textarea>
+        </div>
+        <div class="form-group-light">
+          <label class="form-label-light" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" name="alcohol_present" value="1" style="width:16px;height:16px">
+            Alcohol will be present at this event
+          </label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addEventModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveEventBtn">Submit for Approval</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/chapter.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(node server.js)",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@chapterwatch.edu\",\"password\":\"admin123\"}')",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const p=JSON.parse\\(d\\); console.log\\('Login OK, role:', p.user.role, '| token prefix:', p.token.slice\\(0,20\\)+'...'\\)\")",
+      "Bash(node -e \"process.stdin.on\\('data',d=>{const rows=JSON.parse\\(d\\);console.log\\('Total:',rows.length,'events'\\)}\\)\")",
+      "Bash(netstat -ano)",
+      "Bash(xargs taskkill:*)",
+      "Bash(npm start:*)"
+    ]
+  }
+}
