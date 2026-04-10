@@ -9,13 +9,13 @@ function setUser(u)  { localStorage.setItem(USER_KEY, JSON.stringify(u)); }
 function clearAuth() { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); }
 
 function requireAuth() {
-  if (!getToken()) { window.location.href = '/index.html'; return false; }
+  if (!getToken()) { window.location.href = '/login.html'; return false; }
   return true;
 }
 
 function logout() {
   clearAuth();
-  window.location.href = '/index.html';
+  window.location.href = '/login.html';
 }
 
 // ─── API helper ──────────────────────────────────────────────────────────────
