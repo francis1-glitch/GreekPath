@@ -9,7 +9,18 @@
       "Bash(netstat -ano)",
       "Bash(xargs taskkill:*)",
       "Bash(npm start:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(wc:*)",
+      "Bash(mkdir -p /c/Users/blais/greek-compliance/uploads/documents)",
+      "Bash(mkdir -p /c/Users/blais/greek-compliance/utils)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/nodejs\")",
+      "Bash(node -e ':*)",
+      "Bash(curl -s http://localhost:3000/api/auth/me)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Read(//tmp/**)",
+      "Bash(ls /c/Users/blais/greek-compliance/public/*.html)",
+      "Bash(taskkill /PID 30416 /F)",
+      "Bash(node --check /c/Users/blais/greek-compliance/routes/auth.js)"
     ]
   }
 }

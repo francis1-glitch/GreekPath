@@ -26,6 +26,30 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// POST /api/auth/signup
+router.post('/signup', async (req, res) => {
+  const { name, email, password, role, org_id } = req.body;
+  if (!name || !email || !password || !role)
+    return res.status(400).json({ error: 'Name, email, password, and role are required' });
+  if (!['chapter_officer', 'council_officer'].includes(role))
+    return res.status(400).json({ error: 'Role must be chapter_officer or council_officer' });
+  if (password.length < 8)
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  try {
+    const existing = await get('SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    if (existing) return res.status(409).json({ error: 'An account with that email already exists' });
+
+    const hashed = bcrypt.hashSync(password, 10);
+    await run(
+      'INSERT INTO users (email, password, role, name, org_id) VALUES ($1,$2,$3,$4,$5)',
+      [email.toLowerCase().trim(), hashed, role, name.trim(), org_id || null]
+    );
+    res.status(201).json({ message: 'Account created successfully. You can now log in.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/auth/me
 router.get('/me', authenticate, async (req, res) => {
   try {

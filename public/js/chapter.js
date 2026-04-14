@@ -25,11 +25,11 @@ function renderChapter() {
   document.getElementById('pageTitle').textContent = chapter.name;
 
   // Topbar actions
-  if (canEdit) {
-    document.getElementById('topbarActions').innerHTML = `
-      <button class="btn btn-outline btn-sm" onclick="openEditModal()">Edit Chapter</button>
-    `;
-  }
+  document.getElementById('topbarActions').innerHTML = `
+    <a href="/roster.html?org_id=${orgId}" class="btn btn-outline btn-sm">👥 Roster</a>
+    <a href="/documents.html?org_id=${orgId}" class="btn btn-outline btn-sm">📄 Documents</a>
+    ${canEdit ? `<button class="btn btn-outline btn-sm" onclick="openEditModal()">Edit Chapter</button>` : ''}
+  `;
 
   // Compliance stats
   const total = chapter.compliance ? chapter.compliance.length : 0;
@@ -109,6 +109,12 @@ function renderChapter() {
           <div class="section-title">Compliance Checklist</div>
           <div class="section-subtitle">Spring 2026 requirements</div>
         </div>
+        ${canEdit ? `
+          <div style="display:flex;gap:8px">
+            <a href="/api/compliance/export/csv?org_id=${orgId}" class="btn btn-outline btn-sm">⬇ Export CSV</a>
+            <button class="btn btn-outline btn-sm" style="color:var(--warning);border-color:var(--warning)" onclick="openResetChapterModal()">↺ Reset Semester</button>
+          </div>
+        ` : ''}
       </div>
       ${renderComplianceList()}
     </div>
@@ -385,6 +391,31 @@ document.getElementById('saveEventBtn').addEventListener('click', async () => {
     toast(e.message, 'error');
   } finally {
     btn.disabled = false; btn.textContent = 'Submit for Approval';
+  }
+});
+
+// ─── Compliance Reset ─────────────────────────────────────────────────────────
+function openResetChapterModal() {
+  document.getElementById('resetChapterInput').value = '';
+  openModal('resetChapterModal');
+}
+
+document.getElementById('confirmChapterResetBtn').addEventListener('click', async () => {
+  if (document.getElementById('resetChapterInput').value !== 'RESET') {
+    toast('Type RESET to confirm', 'warning');
+    return;
+  }
+  const btn = document.getElementById('confirmChapterResetBtn');
+  btn.disabled = true; btn.textContent = 'Resetting…';
+  try {
+    const result = await api('POST', '/compliance/reset', { org_id: parseInt(orgId) });
+    toast(result.message);
+    closeModal('resetChapterModal');
+    await loadChapter();
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Reset This Chapter';
   }
 });
 

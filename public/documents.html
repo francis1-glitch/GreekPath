@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreekPath — Documents</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">Documents</div>
+        <div class="topbar-subtitle">Compliance document management</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" id="uploadDocBtn">⬆ Upload Document</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <!-- Stats -->
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px">
+        <div class="stat-card"><div class="stat-icon amber">⏳</div><div><div class="stat-label">Pending Review</div><div class="stat-value" id="ds-pending">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">✓</div><div><div class="stat-label">Approved</div><div class="stat-value" id="ds-approved">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon red">✕</div><div><div class="stat-label">Rejected</div><div class="stat-value" id="ds-rejected">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon navy">📄</div><div><div class="stat-label">Total</div><div class="stat-value" id="ds-total">—</div></div></div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar" style="margin-bottom:16px">
+        <input type="text" class="filter-input" id="searchInput" placeholder="Search by filename or chapter…">
+        <select class="filter-select" id="orgFilter">
+          <option value="">All Chapters</option>
+        </select>
+        <select class="filter-select" id="statusFilter">
+          <option value="">All Statuses</option>
+          <option value="pending_review">Pending Review</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <select class="filter-select" id="reqFilter">
+          <option value="">All Requirements</option>
+        </select>
+      </div>
+
+      <!-- Documents Table -->
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>File Name</th>
+                <th>Chapter</th>
+                <th>Requirement</th>
+                <th>Uploaded By</th>
+                <th>Uploaded</th>
+                <th>Status</th>
+                <th>Reviewed By</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="docsTbody">
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)"><div class="spinner" style="border-color:var(--border);border-top-color:var(--accent);display:inline-block;vertical-align:middle;margin-right:8px"></div> Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Upload Document Modal -->
+<div class="modal-backdrop" id="uploadModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">Upload Compliance Document</div>
+      <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group-light">
+        <label class="form-label-light">Chapter *</label>
+        <select class="form-select-light" id="uploadOrgSel" required>
+          <option value="">Select chapter…</option>
+        </select>
+      </div>
+      <div class="form-group-light">
+        <label class="form-label-light">Compliance Requirement (optional)</label>
+        <select class="form-select-light" id="uploadReqSel">
+          <option value="">Not linked to a specific requirement</option>
+        </select>
+      </div>
+      <div class="form-group-light">
+        <label class="form-label-light">Description / Notes</label>
+        <textarea class="form-textarea-light" id="uploadDesc" placeholder="Add context about this document…" style="min-height:70px"></textarea>
+      </div>
+      <div class="upload-drop-zone" id="docDropZone" style="margin-top:8px">
+        <div style="font-size:2rem">📎</div>
+        <div style="font-weight:600;margin:8px 0">Drop file here or click to browse</div>
+        <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:12px">PDF, DOCX, JPG, PNG — max 25 MB</div>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('docFileInput').click()">Choose File</button>
+        <input type="file" id="docFileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xlsx,.xls" style="display:none">
+      </div>
+      <div id="docSelectedFile" style="display:none;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:10px 14px;margin-top:10px;font-size:.85rem;gap:8px;align-items:center"></div>
+      <div id="docUploadError" style="color:var(--danger);font-size:.85rem;margin-top:8px;display:none"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('uploadModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveDocBtn">Upload Document</button>
+    </div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-backdrop" id="reviewModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title">Review Document</div>
+      <button class="modal-close" onclick="closeModal('reviewModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="reviewDocDetails" style="background:#f8fafc;border-radius:8px;padding:14px;margin-bottom:16px;font-size:.85rem;line-height:1.9"></div>
+      <div class="form-group-light">
+        <label class="form-label-light">Decision</label>
+        <select class="form-select-light" id="reviewDecision">
+          <option value="approved">Approve</option>
+          <option value="rejected">Reject</option>
+          <option value="pending_review">Return to Pending</option>
+        </select>
+      </div>
+      <div class="form-group-light">
+        <label class="form-label-light">Review Notes</label>
+        <textarea class="form-textarea-light" id="reviewNotes" placeholder="Notes for the chapter officer…" style="min-height:80px"></textarea>
+      </div>
+      <input type="hidden" id="reviewDocId">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('reviewModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveReviewBtn">Submit Review</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/documents.js"></script>
+</body>
+</html>

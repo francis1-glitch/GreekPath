@@ -15,7 +15,7 @@
     <header class="topbar">
       <div>
         <div class="topbar-title">Events</div>
-        <div class="topbar-subtitle">Event approval workflow</div>
+        <div class="topbar-subtitle">Event approval workflow and calendar</div>
       </div>
       <div class="topbar-right">
         <button class="btn btn-primary btn-sm" id="registerEventBtn">+ Register Event</button>
@@ -23,68 +23,83 @@
     </header>
 
     <div class="page-content">
-      <!-- Stats -->
-      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:24px">
-        <div class="stat-card"><div class="stat-icon amber">⏳</div><div><div class="stat-label">Pending Review</div><div class="stat-value" id="es-pending">—</div></div></div>
-        <div class="stat-card"><div class="stat-icon green">✓</div><div><div class="stat-label">Approved</div><div class="stat-value" id="es-approved">—</div></div></div>
-        <div class="stat-card"><div class="stat-icon red">✕</div><div><div class="stat-label">Denied</div><div class="stat-value" id="es-denied">—</div></div></div>
-        <div class="stat-card"><div class="stat-icon amber">🍺</div><div><div class="stat-label">Alcohol Present</div><div class="stat-value" id="es-alcohol">—</div></div></div>
+      <!-- Tab switcher -->
+      <div class="tab-bar" style="margin-bottom:20px">
+        <button class="tab-btn active" id="tabList" onclick="switchTab('list')">List View</button>
+        <button class="tab-btn" id="tabCalendar" onclick="switchTab('calendar')">📅 Calendar</button>
       </div>
 
-      <!-- Filters -->
-      <div class="filters-bar">
-        <input type="text" class="filter-input" id="searchInput" placeholder="Search events…">
-        <select class="filter-select" id="orgFilter">
-          <option value="">All Chapters</option>
-        </select>
-        <select class="filter-select" id="statusFilter">
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="denied">Denied</option>
-        </select>
-        <select class="filter-select" id="alcoholFilter">
-          <option value="">Any</option>
-          <option value="1">Alcohol Present</option>
-          <option value="0">No Alcohol</option>
-        </select>
-      </div>
+      <!-- LIST VIEW -->
+      <div id="listView">
+        <!-- Stats -->
+        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px">
+          <div class="stat-card"><div class="stat-icon amber">⏳</div><div><div class="stat-label">Pending Review</div><div class="stat-value" id="es-pending">—</div></div></div>
+          <div class="stat-card"><div class="stat-icon green">✓</div><div><div class="stat-label">Approved</div><div class="stat-value" id="es-approved">—</div></div></div>
+          <div class="stat-card"><div class="stat-icon red">✕</div><div><div class="stat-label">Denied</div><div class="stat-value" id="es-denied">—</div></div></div>
+          <div class="stat-card"><div class="stat-icon amber">🍺</div><div><div class="stat-label">Alcohol Present</div><div class="stat-value" id="es-alcohol">—</div></div></div>
+        </div>
 
-      <!-- Pending review section (for admins/officers) -->
-      <div id="pendingSection" style="display:none;margin-bottom:24px">
-        <div class="section-header">
-          <div>
-            <div class="section-title" style="color:var(--warning)">⏳ Awaiting Review</div>
-            <div class="section-subtitle">These events need approval before they proceed</div>
+        <!-- Filters -->
+        <div class="filters-bar">
+          <input type="text" class="filter-input" id="searchInput" placeholder="Search events…">
+          <select class="filter-select" id="orgFilter"><option value="">All Chapters</option></select>
+          <select class="filter-select" id="statusFilter">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="denied">Denied</option>
+          </select>
+          <select class="filter-select" id="alcoholFilter">
+            <option value="">Any</option>
+            <option value="1">Alcohol Present</option>
+            <option value="0">No Alcohol</option>
+          </select>
+        </div>
+
+        <!-- Pending review section -->
+        <div id="pendingSection" style="display:none;margin-bottom:20px">
+          <div class="section-header">
+            <div>
+              <div class="section-title" style="color:var(--warning)">⏳ Awaiting Review</div>
+              <div class="section-subtitle">These events need approval before they proceed</div>
+            </div>
+          </div>
+          <div id="pendingCards"></div>
+        </div>
+
+        <!-- All Events Table -->
+        <div class="section-header"><div class="section-title">All Events</div></div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th><th>Event</th><th>Chapter</th><th>Venue</th>
+                  <th>Attendance</th><th>Alcohol</th><th>Status</th><th>Reviewer</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTbody">
+                <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted)"><div class="spinner" style="border-color:var(--border);border-top-color:var(--accent);display:inline-block;vertical-align:middle;margin-right:8px"></div> Loading…</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-        <div id="pendingCards"></div>
       </div>
 
-      <!-- All Events Table -->
-      <div class="section-header">
-        <div class="section-title">All Events</div>
-      </div>
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Event</th>
-                <th>Chapter</th>
-                <th>Venue</th>
-                <th>Attendance</th>
-                <th>Alcohol</th>
-                <th>Status</th>
-                <th>Reviewed By</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="eventsTbody">
-              <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted)"><div class="spinner" style="border-color:var(--border);border-top-color:var(--accent);display:inline-block;vertical-align:middle;margin-right:8px"></div> Loading…</td></tr>
-            </tbody>
-          </table>
+      <!-- CALENDAR VIEW -->
+      <div id="calendarView" style="display:none">
+        <div class="card" style="padding:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <button class="btn btn-ghost btn-sm" id="calPrev">← Prev</button>
+            <div id="calTitle" style="font-size:1.1rem;font-weight:700"></div>
+            <button class="btn btn-ghost btn-sm" id="calNext">Next →</button>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div style="margin-top:16px;display:flex;gap:16px;font-size:.8rem">
+            <span><span class="cal-dot approved"></span> Approved</span>
+            <span><span class="cal-dot pending"></span> Pending</span>
+            <span><span class="cal-dot denied"></span> Denied</span>
+          </div>
         </div>
       </div>
     </div>
@@ -93,7 +108,7 @@
 
 <!-- Register Event Modal -->
 <div class="modal-backdrop" id="registerModal">
-  <div class="modal">
+  <div class="modal" style="max-width:560px">
     <div class="modal-header">
       <div class="modal-title">Register New Event</div>
       <button class="modal-close" onclick="closeModal('registerModal')">✕</button>
@@ -123,6 +138,10 @@
         <div class="form-group-light">
           <label class="form-label-light">Venue</label>
           <input type="text" class="form-input-light" name="venue" placeholder="The Penn Stater Conference Center">
+        </div>
+        <div class="form-group-light">
+          <label class="form-label-light">Risk Assessment</label>
+          <textarea class="form-textarea-light" name="risk_assessment" placeholder="Identify potential risks and mitigation strategies…"></textarea>
         </div>
         <div class="form-group-light">
           <label class="form-label-light">Security Plan</label>
@@ -169,6 +188,32 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('reviewModal')">Cancel</button>
       <button class="btn btn-primary" id="saveReviewBtn">Submit Decision</button>
+    </div>
+  </div>
+</div>
+
+<!-- Post-Event Report Modal -->
+<div class="modal-backdrop" id="reportModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Post-Event Report</div>
+      <button class="modal-close" onclick="closeModal('reportModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="reportEventName" style="font-weight:600;margin-bottom:12px;font-size:.95rem"></div>
+      <div class="form-group-light">
+        <label class="form-label-light">Actual Attendance</label>
+        <input type="number" class="form-input-light" id="reportAttendance" placeholder="Actual number of attendees">
+      </div>
+      <div class="form-group-light">
+        <label class="form-label-light">Incident Notes</label>
+        <textarea class="form-textarea-light" id="reportNotes" placeholder="Note any incidents, issues, or observations from the event…" style="min-height:100px"></textarea>
+      </div>
+      <input type="hidden" id="reportEventId">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('reportModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveReportBtn">Submit Report</button>
     </div>
   </div>
 </div>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreekPath — Rosters</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">Roster Management</div>
+        <div class="topbar-subtitle">Manage chapter membership records</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" id="exportBtn">⬇ Export CSV</button>
+        <button class="btn btn-outline btn-sm" id="historyBtn">📋 History</button>
+        <button class="btn btn-outline btn-sm" id="uploadBtn">⬆ Import Roster</button>
+        <button class="btn btn-primary btn-sm" id="addMemberBtn">+ Add Member</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <!-- Chapter selector -->
+      <div class="card" style="margin-bottom:20px;padding:16px 20px">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <label style="font-weight:600;font-size:.875rem;color:var(--text-muted)">Chapter:</label>
+          <select class="filter-select" id="chapterSel" style="min-width:220px"></select>
+          <div style="margin-left:auto;display:flex;gap:12px;align-items:center">
+            <span id="rosterStats" style="font-size:.8rem;color:var(--text-muted)"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:20px">
+        <div class="stat-card"><div class="stat-icon green">👤</div><div><div class="stat-label">Active</div><div class="stat-value" id="rs-active">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon amber">🎓</div><div><div class="stat-label">Alumni</div><div class="stat-value" id="rs-alumni">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon navy">🏷</div><div><div class="stat-label">New Members</div><div class="stat-value" id="rs-pledge">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon blue">📊</div><div><div class="stat-label">Avg GPA</div><div class="stat-value" id="rs-gpa">—</div></div></div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar" style="margin-bottom:16px">
+        <input type="text" class="filter-input" id="searchInput" placeholder="Search by name, email, ID…">
+        <select class="filter-select" id="statusFilter">
+          <option value="">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="alumni">Alumni</option>
+          <option value="suspended">Suspended</option>
+        </select>
+        <select class="filter-select" id="roleFilter">
+          <option value="">All Roles</option>
+          <option value="president">President</option>
+          <option value="vp">VP</option>
+          <option value="treasurer">Treasurer</option>
+          <option value="secretary">Secretary</option>
+          <option value="officer">Officer</option>
+          <option value="member">Member</option>
+        </select>
+      </div>
+
+      <!-- Members Table -->
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Student ID</th>
+                <th>Pledge Class</th>
+                <th>Grad Year</th>
+                <th>Major</th>
+                <th>GPA</th>
+                <th>Status</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="membersTbody">
+              <tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text-muted)">Select a chapter to view its roster.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Upload / Import Modal -->
+<div class="modal-backdrop" id="uploadModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title">Import Roster from File</div>
+      <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Step 1: Upload -->
+      <div id="uploadStep1">
+        <div class="upload-drop-zone" id="dropZone">
+          <div style="font-size:2rem">📂</div>
+          <div style="font-weight:600;margin:8px 0">Drag & drop your roster file here</div>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:16px">Supports .xlsx, .xls, .csv — max 10 MB</div>
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('rosterFileInput').click()">Choose File</button>
+          <input type="file" id="rosterFileInput" accept=".xlsx,.xls,.csv" style="display:none">
+        </div>
+        <div id="uploadError" style="color:var(--danger);font-size:.85rem;margin-top:8px;display:none"></div>
+        <div class="form-row" style="margin-top:16px">
+          <div class="form-group-light">
+            <label class="form-label-light">Semester</label>
+            <select class="form-select-light" id="importSemester">
+              <option value="Fall">Fall</option>
+              <option value="Spring">Spring</option>
+              <option value="Summer">Summer</option>
+            </select>
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Year</label>
+            <input type="number" class="form-input-light" id="importYear" value="2025" min="2000" max="2099">
+          </div>
+        </div>
+        <div class="form-group-light" style="margin-top:4px">
+          <label class="form-label-light" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="replaceExisting" style="width:16px;height:16px">
+            Mark current active members as inactive before import
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 2: Preview -->
+      <div id="uploadStep2" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div>
+            <strong id="previewCount"></strong>
+            <span style="font-size:.8rem;color:var(--text-muted);margin-left:8px" id="previewNote"></span>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="resetUpload()">← Back</button>
+        </div>
+        <div class="table-wrap" style="max-height:300px;overflow-y:auto">
+          <table id="previewTable" style="font-size:.8rem">
+            <thead id="previewHead"></thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;font-size:.8rem;color:var(--text-muted)">
+          Showing first 10 rows. Click <strong>Confirm Import</strong> to import all <span id="previewTotalCount"></span> rows.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('uploadModal')">Cancel</button>
+      <button class="btn btn-primary" id="confirmImportBtn" style="display:none">✓ Confirm Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal-backdrop" id="historyModal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title">Roster History</div>
+      <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Member Modal -->
+<div class="modal-backdrop" id="memberModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title" id="memberModalTitle">Add Member</div>
+      <button class="modal-close" onclick="closeModal('memberModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="memberForm">
+        <input type="hidden" name="id">
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">First Name *</label>
+            <input type="text" class="form-input-light" name="first_name" required>
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Last Name *</label>
+            <input type="text" class="form-input-light" name="last_name" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Email</label>
+            <input type="email" class="form-input-light" name="email" placeholder="abc123@psu.edu">
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Student ID</label>
+            <input type="text" class="form-input-light" name="student_id" placeholder="9xxxxxxxx">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Pledge Class</label>
+            <input type="text" class="form-input-light" name="pledge_class" placeholder="Fall 2023">
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Graduation Year</label>
+            <input type="number" class="form-input-light" name="graduation_year" placeholder="2026" min="2020" max="2035">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Major</label>
+            <input type="text" class="form-input-light" name="major" placeholder="Computer Science">
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">GPA</label>
+            <input type="number" class="form-input-light" name="gpa" step="0.01" min="0" max="4" placeholder="3.50">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group-light">
+            <label class="form-label-light">Status</label>
+            <select class="form-select-light" name="status">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="alumni">Alumni</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <div class="form-group-light">
+            <label class="form-label-light">Chapter Role</label>
+            <select class="form-select-light" name="role">
+              <option value="member">Member</option>
+              <option value="officer">Officer</option>
+              <option value="president">President</option>
+              <option value="vp">VP</option>
+              <option value="treasurer">Treasurer</option>
+              <option value="secretary">Secretary</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group-light">
+          <label class="form-label-light">Joined Date</label>
+          <input type="date" class="form-input-light" name="joined_date">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('memberModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveMemberBtn">Save Member</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/roster.js"></script>
+</body>
+</html>

@@ -134,4 +134,63 @@ router.get('/overview', async (req, res) => {
   }
 });
 
+// POST /api/compliance/reset — bulk reset to pending for new semester
+router.post('/reset', requireRole('admin', 'council_officer'), async (req, res) => {
+  const { org_id } = req.body;
+  try {
+    const params = [];
+    let where = '';
+    if (org_id) { where = ' WHERE org_id=$1'; params.push(org_id); }
+    const result = await run(
+      `UPDATE compliance_status
+       SET status='pending', submitted_date=NULL, reviewed_by=NULL, notes=NULL${where}`,
+      params
+    );
+    res.json({
+      updated: result.changes,
+      message: org_id
+        ? `Reset ${result.changes} requirement(s) for this chapter`
+        : `Reset ${result.changes} requirement(s) across all chapters`,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/compliance/export/csv — export compliance status as CSV
+router.get('/export/csv', async (req, res) => {
+  const { org_id } = req.query;
+  try {
+    const params = [];
+    let where = '';
+    if (org_id) { where = ' AND cs.org_id=$1'; params.push(org_id); }
+    const rows = await all(`
+      SELECT o.name AS chapter, o.chapter_letters, o.council,
+             cr.name AS requirement, cr.category, cr.deadline,
+             cs.status, cs.submitted_date, cs.notes
+      FROM compliance_status cs
+      JOIN organizations o ON cs.org_id = o.id
+      JOIN compliance_requirements cr ON cs.requirement_id = cr.id
+      WHERE 1=1${where}
+      ORDER BY o.council, o.name, cr.category, cr.name
+    `, params);
+
+    const headers = ['Chapter','Letters','Council','Requirement','Category','Deadline','Status','Submitted','Notes'];
+    const csv = [headers.join(','), ...rows.map(r => [
+      `"${r.chapter}"`, r.chapter_letters, r.council,
+      `"${r.requirement}"`, r.category,
+      r.deadline ? r.deadline.split('T')[0] : '',
+      r.status,
+      r.submitted_date ? r.submitted_date.split('T')[0] : '',
+      `"${(r.notes || '').replace(/"/g,'""')}"`,
+    ].join(','))].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="compliance.csv"');
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

@@ -12,16 +12,18 @@
 <body>
 <div class="login-page">
   <div class="login-card">
-    <div class="login-logo">
+    <a href="/" class="login-logo" style="text-decoration:none">
       <div class="logo-icon">⚖</div>
       <div>
         <div class="logo-title">GreekPath</div>
         <div class="logo-sub">Compliance Platform</div>
       </div>
-    </div>
+    </a>
 
     <h2 class="login-heading">Welcome back</h2>
     <p class="login-subhead">Sign in to manage Greek life compliance</p>
+
+    <div id="successBanner" style="display:none;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:11px 14px;margin-bottom:18px;font-size:.84rem;color:#86efac"></div>
 
     <form id="loginForm">
       <div class="form-group">
@@ -44,6 +46,19 @@
       Officer: <code>ifc.officer@psu.edu</code> / <code>officer123</code><br>
       Chapter: <code>sigchi.officer@psu.edu</code> / <code>chapter123</code>
     </div>
+
+    <div style="text-align:center;margin-top:20px;display:flex;align-items:center;justify-content:space-between">
+      <a href="/" style="font-size:.8rem;color:rgba(255,255,255,.35);transition:color .15s"
+         onmouseover="this.style.color='rgba(255,255,255,.7)'"
+         onmouseout="this.style.color='rgba(255,255,255,.35)'">
+        ← Back to Home
+      </a>
+      <a href="/signup.html" style="font-size:.8rem;color:rgba(74,143,232,.7);transition:color .15s"
+         onmouseover="this.style.color='rgba(74,143,232,1)'"
+         onmouseout="this.style.color='rgba(74,143,232,.7)'">
+        Create an account →
+      </a>
+    </div>
   </div>
 </div>
 
@@ -51,6 +66,14 @@
 <script>
   // Redirect if already logged in
   if (getToken()) window.location.href = '/dashboard.html';
+
+  // Show success message passed from signup page
+  const msg = new URLSearchParams(location.search).get('msg');
+  if (msg) {
+    const banner = document.getElementById('successBanner');
+    banner.textContent = '✓  ' + decodeURIComponent(msg);
+    banner.style.display = 'block';
+  }
 
   document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();

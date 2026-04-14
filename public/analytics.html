@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreekPath — Analytics</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">Analytics</div>
+        <div class="topbar-subtitle">System-wide reporting and insights</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" onclick="exportCSV('chapters')">⬇ Chapters</button>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV('incidents')">⬇ Incidents</button>
+        <button class="btn btn-outline btn-sm" onclick="window.location.href='/api/compliance/export/csv'">⬇ Compliance</button>
+        <button class="btn btn-outline btn-sm" id="resetBtn" style="display:none;color:var(--warning);border-color:var(--warning)" onclick="openResetModal()">↺ Reset Semester</button>
+        <button class="btn btn-primary btn-sm" id="gpaSettingsBtn">⚙ GPA Settings</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <!-- Summary Stats -->
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:24px">
+        <div class="stat-card"><div class="stat-icon navy">🏛</div><div><div class="stat-label">Total Chapters</div><div class="stat-value" id="an-total">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">✓</div><div><div class="stat-label">Active Chapters</div><div class="stat-value" id="an-active">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">📋</div><div><div class="stat-label">Compliance Rate</div><div class="stat-value" id="an-compliance">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon amber">⏳</div><div><div class="stat-label">Pending Reviews</div><div class="stat-value" id="an-pending">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon red">⚠</div><div><div class="stat-label">Open Incidents</div><div class="stat-value" id="an-incidents">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon blue">📊</div><div><div class="stat-label">Overall GPA</div><div class="stat-value" id="an-gpa">—</div></div></div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="card" style="padding:20px">
+          <div class="section-title" style="margin-bottom:16px">Compliance Rate by Council</div>
+          <canvas id="complianceChart" height="220"></canvas>
+        </div>
+        <div class="card" style="padding:20px">
+          <div class="section-title" style="margin-bottom:16px">Incident Frequency (Last 12 Months)</div>
+          <canvas id="incidentChart" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div class="card" style="padding:20px">
+          <div class="section-title" style="margin-bottom:16px">Incident Types</div>
+          <canvas id="typeChart" height="220"></canvas>
+        </div>
+        <div class="card" style="padding:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div class="section-title">Chapter GPA Monitoring</div>
+            <div style="font-size:.8rem;color:var(--text-muted)">
+              Threshold: <strong id="gpaThresholdLabel">2.50</strong>
+            </div>
+          </div>
+          <canvas id="gpaChart" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Risk Assessment Table -->
+      <div class="card" style="margin-bottom:20px">
+        <div style="padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+          <div class="section-title">Chapter Risk Assessment</div>
+          <div style="font-size:.75rem;color:var(--text-muted)">Scored on open incidents, compliance gaps, and GPA</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Chapter</th>
+                <th>Council</th>
+                <th>Risk Score</th>
+                <th>Risk Level</th>
+                <th>Open Incidents</th>
+                <th>Overdue Requirements</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="riskTbody">
+              <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GPA Table -->
+      <div class="card" style="margin-bottom:20px">
+        <div style="padding:16px 20px 0">
+          <div class="section-title">Chapter GPA Status</div>
+        </div>
+        <div class="table-wrap">
+          <table id="gpaTable">
+            <thead>
+              <tr>
+                <th>Chapter</th>
+                <th>Council</th>
+                <th>Current GPA</th>
+                <th>Roster Size</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="gpaTbody">
+              <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted)">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Reset Semester Modal -->
+<div class="modal-backdrop" id="resetModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title">Reset Compliance for New Semester</div>
+      <button class="modal-close" onclick="closeModal('resetModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fff8ed;border:1px solid #fed7aa;border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:.85rem;line-height:1.6">
+        <strong>⚠ This will reset ALL compliance requirement statuses to "Pending"</strong> for every chapter — clearing submitted dates, reviewer notes, and approvals. Use this at the start of a new semester.
+      </div>
+      <div class="form-group-light">
+        <label class="form-label-light">Type <strong>RESET</strong> to confirm</label>
+        <input type="text" class="form-input-light" id="resetConfirmInput" placeholder="RESET">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('resetModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmResetBtn">Reset All Chapters</button>
+    </div>
+  </div>
+</div>
+
+<!-- GPA Settings Modal -->
+<div class="modal-backdrop" id="gpaModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">GPA Threshold Settings</div>
+      <button class="modal-close" onclick="closeModal('gpaModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group-light">
+        <label class="form-label-light">Global Minimum GPA</label>
+        <input type="number" class="form-input-light" id="globalGpaInput" step="0.01" min="0" max="4" placeholder="2.50">
+        <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">Chapters with chapter GPA below this threshold will be flagged.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('gpaModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveGpaBtn">Save Threshold</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/analytics.js"></script>
+</body>
+</html>
