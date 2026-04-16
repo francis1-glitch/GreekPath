@@ -26,6 +26,11 @@ app.use('/api/notifications', require('./routes/notifications'));
 
 app.use('/api/*', (req, res) => res.status(404).json({ error: 'API route not found' }));
 
+// Catch-all: serve 404 page for any unmatched route
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
+
 initializeDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`\n  GreekPath running at http://localhost:${PORT}\n`);
